@@ -1,0 +1,64 @@
+#!/usr/bin/env ruby
+require 'json'
+require 'dogapi'
+require 'colorize'
+require 'rationalist' # Simple option parser
+
+def datadog_key
+  datadog_api_key = ENV["DATADOG_KEY"]
+
+  unless datadog_api_key
+    puts "$DATADOG_KEY is required for this tool to function! Please set it.".red
+    exit 1
+  end
+
+  datadog_api_key
+end
+
+def hash_from_stdin
+  begin
+    input_hash = JSON.parse($stdin.read)
+  rescue JSON::ParserError => e
+    puts "Receieved a error parsing the JSON given: #{e}".red
+    exit 1
+  end
+
+  input_hash
+end
+
+def help
+  puts "Usage: #{$0}"
+  puts "Options:"
+  puts "  --metric      Name of the metric to store in datadog"
+  puts "  --tag-prefix  Namespace prefix for metric tag"
+  puts "  --verbose     Enable verbose output"
+end
+
+
+argv = Rationalist.parse(ARGV)
+
+
+if ARGV.empty?
+  help
+  exit 1
+end
+
+
+metric_name = argv[:metric]
+tag_prefix = argv[:'tag-prefix']
+verbose = argv[:verbose] || argv[:v]
+help_requested = argv[:help] || argv[:h]
+
+if help_requested
+  help
+  exit 0
+end
+
+dog = Dogapi::Client.new(datadog_key)
+
+hash_from_stdin.each do |tag, count|
+  tag = "#{tag_prefix}:#{tag}" if tag_prefix
+  response = dog.emit_point(metric_name, count, tags: [tag])
+
+  puts "#{tag}: work completed.".green if verbose && response.first == "202"
+end
