@@ -4,15 +4,11 @@ require 'dogapi'
 require 'colorize'
 require 'rationalist' # Simple option parser
 
-def datadog_key
-  datadog_api_key = ENV["DATADOG_KEY"]
-
-  unless datadog_api_key
+def check_datadog_key(key)
+  unless key
     puts "$DATADOG_KEY is required for this tool to function! Please set it.".red
     exit 1
   end
-
-  datadog_api_key
 end
 
 def hash_from_stdin
@@ -26,12 +22,18 @@ def hash_from_stdin
   input_hash
 end
 
+def additional_tags_array(tag_string)
+  tag_string.split(',')
+end
+
 def help
   puts "Usage: #{$0}"
   puts "Options:"
-  puts "  --metric      Name of the metric to store in datadog"
-  puts "  --tag-prefix  Namespace prefix for metric tag"
-  puts "  --verbose     Enable verbose output"
+  puts "  --metric           Name of the metric to store in datadog"
+  puts "  --tag-prefix       Namespace prefix for metric tag"
+  puts "  --verbose          Enable verbose output"
+  puts "  --api-key          Your datadog api key (can also be set as $DATADOG_KEY)"
+  puts "  --additional-tags  A list of additional tags you want to send, formatted like 'environment:prod,foo:bar'"
 end
 
 
@@ -48,17 +50,24 @@ metric_name = argv[:metric]
 tag_prefix = argv[:'tag-prefix']
 verbose = argv[:verbose] || argv[:v]
 help_requested = argv[:help] || argv[:h]
+datadog_api_key = argv[:'api-key'] || ENV["DATADOG_KEY"]
+additional_tag_argument = argv[:'additional-tags']
 
 if help_requested
   help
   exit 0
 end
 
-dog = Dogapi::Client.new(datadog_key)
+check_datadog_key(datadog_api_key)
+
+tags = additional_tags_array(additional_tag_argument) if additional_tag_argument
+
+dog = Dogapi::Client.new(datadog_api_key)
 
 hash_from_stdin.each do |tag, count|
   tag = "#{tag_prefix}:#{tag}" if tag_prefix
-  response = dog.emit_point(metric_name, count, tags: [tag])
+  tags << tag
+  response = dog.emit_point(metric_name, count, tags: tags)
 
   puts "#{tag}: work completed.".green if verbose && response.first == "202"
 end
