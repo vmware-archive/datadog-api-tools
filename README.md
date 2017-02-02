@@ -25,4 +25,15 @@ and sends it to datadog. It assumes:
 ## Example Usage
 `cat ~/bosh-stats-json | ./json_to_datadog --metric cloudops_tools.deployment_count --tag-prefix bosh-stats -v`
 
+## Arguments
+```
+Usage: ./json_to_datadog
+Options:
+  --metric           Name of the metric to store in datadog
+  --tag-prefix       Namespace prefix for metric tag
+  --verbose          Enable verbose output
+  --api-key          Your datadog api key (can also be set as $DATADOG_KEY)
+  --additional-tags  A list of additional tags you want to send, formatted like 'environment:prod,foo:bar'
+```
+
 
