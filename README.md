@@ -1,4 +1,17 @@
+# Datadog API Tools
+
+Ideally this repo can hold multiple (preferably small) tools for working with
+the datadog API. Cloudops has a lot of code where we use `curl` to interact
+with the Datadog API, but sometimes that's not easy to reason about.
+
+Wouldn't it be cool if we had [small, modular tools](https://en.wikipedia.org/wiki/Unix_philosophy#Do_One_Thing_and_Do_It_Well) to interact with the API?
+
+## Tools in this repo
+- [json-to-datadog](#json-to-datadog): Takes a JSON object/hash and sends each item in the hash as a metric to datadog.
+
+
 # json to datadog
+Send metrics to datadog from JSON.
 
 This tool takes a json object like this from `STDIN`
 
