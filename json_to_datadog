@@ -36,47 +36,50 @@ def help
   puts "  --additional-tags  A list of additional tags you want to send, formatted like 'environment:prod,foo:bar'"
 end
 
+def args
+  return @args if @args
 
-argv = Rationalist.parse(ARGV)
+  if ARGV.empty?
+    help
+    exit 1
+  end
 
+  argv = Rationalist.parse(ARGV)
+  @args = argv
 
-if ARGV.empty?
-  help
-  exit 1
+  @args[:verbose] = argv[:verbose] || argv[:v]
+  @args[:help] = argv[:help] || argv[:h]
+  @args[:datadog_api_key] = argv[:'api-key'] || ENV["DATADOG_KEY"]
+  @args[:tag_prefix] = argv[:'tag-prefix']
+  @args[:additional_tags] = argv[:'additional-tags']
+
+  @args
 end
 
-
-metric_name = argv[:metric]
-tag_prefix = argv[:'tag-prefix']
-verbose = argv[:verbose] || argv[:v]
-help_requested = argv[:help] || argv[:h]
-datadog_api_key = argv[:'api-key'] || ENV["DATADOG_KEY"]
-additional_tag_argument = argv[:'additional-tags']
-
-if help_requested
+if args[:help]
   help
   exit 0
 end
 
-check_datadog_key(datadog_api_key)
+check_datadog_key(args[:datadog_api_key])
 
-tags = additional_tags_array(additional_tag_argument) if additional_tag_argument
-
-dog = Dogapi::Client.new(datadog_api_key)
+dog = Dogapi::Client.new(args[:datadog_api_key])
 threads = []
 
 hash_from_stdin.each do |tag, count|
   threads << Thread.new do
-    tag = "#{tag_prefix}:#{tag}" if tag_prefix
+    tags = additional_tags_array(args[:additional_tags]) if args[:additional_tags]
+
+    tag = "#{args[:tag_prefix]}:#{tag}" if args[:tag_prefix]
     tags << tag
-    response = dog.emit_point(metric_name, count, tags: tags)
+    response = dog.emit_point(args[:metric], count, tags: tags)
 
     status = response.first.to_i
 
     if status > 100 && status < 300
-      Thread.current[:message] = "#{tag}: work completed.".green if verbose
+      Thread.current[:message] = "#{tag}: work completed.".green if args[:verbose]
     else
-      Thread.current[:message] = "#{tag}: received a non-200 status code: #{response}".red if verbose
+      Thread.current[:message] = "#{tag}: received a non-200 status code: #{response}".red if args[:verbose]
     end
   end
 end
