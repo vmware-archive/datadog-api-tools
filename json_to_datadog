@@ -63,11 +63,25 @@ check_datadog_key(datadog_api_key)
 tags = additional_tags_array(additional_tag_argument) if additional_tag_argument
 
 dog = Dogapi::Client.new(datadog_api_key)
+threads = []
 
 hash_from_stdin.each do |tag, count|
-  tag = "#{tag_prefix}:#{tag}" if tag_prefix
-  tags << tag
-  response = dog.emit_point(metric_name, count, tags: tags)
+  threads << Thread.new do
+    tag = "#{tag_prefix}:#{tag}" if tag_prefix
+    tags << tag
+    response = dog.emit_point(metric_name, count, tags: tags)
 
-  puts "#{tag}: work completed.".green if verbose && response.first == "202"
+    status = response.first.to_i
+
+    if status > 100 && status < 300
+      Thread.current[:message] = "#{tag}: work completed.".green if verbose
+    else
+      Thread.current[:message] = "#{tag}: received a non-200 status code: #{response}".red if verbose
+    end
+  end
+end
+
+threads.each do |thread|
+  thread.join
+  puts thread[:message] if thread[:message]
 end
