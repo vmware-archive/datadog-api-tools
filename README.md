@@ -1,6 +1,6 @@
 # json to datadog
 
-This tool takes a json object like this
+This tool takes a json object like this from `STDIN`
 
 ```
 {
@@ -23,6 +23,9 @@ and sends it to datadog. It assumes:
 - That the user has `$DATADOG_KEY` created
 
 ## Example Usage
+For example, if you have a file in your home directory named `bosh-stats-json`, 
+you can send that data to datadog with the following:
+
 `cat ~/bosh-stats-json | ./json_to_datadog --metric cloudops_tools.deployment_count --tag-prefix bosh-stats -v`
 
 ## Arguments
