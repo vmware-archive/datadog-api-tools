@@ -39,7 +39,7 @@ and sends it to datadog. It assumes:
 For example, if you have a file in your home directory named `bosh-stats-json`, 
 you can send that data to datadog with the following:
 
-`cat ~/bosh-stats-json | ./json_to_datadog --metric cloudops_tools.deployment_count --tag-prefix bosh-stats -v`
+`cat ~/bosh-stats-json | ./json_to_datadog --metric cloudops_tools.deployment_count --tag-prefix bosh-stats --api-key 'datadog_key' --additional-tags '{environment: prod, foo: bar}``
 
 ## Arguments
 ```
