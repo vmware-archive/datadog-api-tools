@@ -5,7 +5,7 @@ GEM
     dogapi (1.24.0)
       multi_json
     multi_json (1.12.1)
-    trollop (2.1.2)
+    rationalist (2.0.0)
 
 PLATFORMS
   ruby
@@ -13,7 +13,7 @@ PLATFORMS
 DEPENDENCIES
   colorize
   dogapi
-  trollop
+  rationalist
 
 BUNDLED WITH
-   1.13.5
+   2.0.1
